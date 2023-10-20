@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:experimental
+# CUDA development image for building sources
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 as builder
+
+# available options 3.8, 3.9, 3.10, 3.11
+ARG PYTHON_VERSION=3.10
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install and update tools to minimize security vulnerabilities
+RUN apt update -y && apt install -y software-properties-common wget apt-utils patchelf git libprotobuf-dev protobuf-compiler cmake \
+    git bash curl libturbojpeg exiftool ffmpeg poppler-utils \
+    libtiff5-dev libjpeg8-dev libopenjp2-7-dev zlib1g-dev \
+    libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python3-tk \
+    libharfbuzz-dev libfribidi-dev libxcb1-dev
+RUN unattended-upgrade
+RUN apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+# install miniconda (comes with python 3.9 default)
+ARG MINICONDA_PREFIX=/home/adl/miniconda3
+
+ARG CONDA_URL=https://repo.anaconda.com/miniconda/Miniconda3-py310_23.5.2-0-Linux-x86_64.sh
+RUN curl -fSsL --insecure ${CONDA_URL} -o install-conda.sh && \
+    /bin/bash ./install-conda.sh -b -p $MINICONDA_PREFIX && \
+    $MINICONDA_PREFIX/bin/conda clean -ya && \
+    $MINICONDA_PREFIX/bin/conda install -y python=${PYTHON_VERSION}
+
+ENV PATH=$MINICONDA_PREFIX/bin:${PATH}
+
+ARG PYTHON_EXE=$MINICONDA_PREFIX/bin/python
+
+RUN $PYTHON_EXE -m pip install pip wheel ipython fire ninja cython tqdm
+RUN $PYTHON_EXE -m pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 \
+    --index-url https://download.pytorch.org/whl/cu116
+
+# for hw1
+WORKDIR /code
+COPY . /code
+RUN $PYTHON_EXE -m pip install -r requirements.txt
+
+CMD bash

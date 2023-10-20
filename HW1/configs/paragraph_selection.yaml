@@ -1,0 +1,39 @@
+# data
+cache_dir: ./tmp
+
+data:
+  train_file: data/train.json
+  validation_file: data/valid.json
+  test_file: data/test.json
+  context_file: data/context.json
+  max_length: 512
+  pad_to_max_length: false
+  overwrite_cache: false
+  preprocessing_num_workers: 1
+
+# model
+model:
+  model_name_or_path: bert-base-chinese
+  tokenizer_name: null
+  use_fast_tokenizer: true
+
+# trainer
+trainer:
+  seed: 42
+  data_seed: 42
+  output_dir: results/paragraph_selection
+  overwrite_output_dir: true
+  do_train: true
+  do_eval: true
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 2
+  tf32: true
+  dataloader_drop_last: true
+  dataloader_num_workers: 4
+  learning_rate: 0.0001
+  num_train_epochs: 1
+  warmup_steps: 200
+  resume_from_checkpoint: null
+  full_determinism: false
+  disable_tqdm: false
