@@ -1,0 +1,3 @@
+bash scripts/train_paragraph_selection.sh bert_base_chinese
+bash scripts/train_question_answering.sh bert_base_chinese
+bash scripts/test.sh bert_base_chinese
