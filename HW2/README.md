@@ -29,7 +29,8 @@ cd -
 Please put the data into the correct path as follows:
 
 ```bash
-gdown
+gdown 1HiP6vuRGKpT3FcTnePLVBYl5OCs9NVe3
+unzip data_for_train.zip
 ```
 
 ### Run training script with docker
