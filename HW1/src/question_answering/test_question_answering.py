@@ -1,21 +1,15 @@
 import argparse
+import csv
 from pathlib import Path
 
 import numpy as np
-from datasets import load_dataset
-
 import torch
+from datasets import load_dataset
 from torch.utils.data import DataLoader
-
-from transformers import (
-    AutoConfig,
-    AutoModelForQuestionAnswering,
-    AutoTokenizer,
-    default_data_collator,
-)
-from utils import postprocess_qa_predictions
 from tqdm import tqdm
-import csv
+from transformers import (AutoConfig, AutoModelForQuestionAnswering,
+                          AutoTokenizer, default_data_collator)
+from utils import postprocess_qa_predictions
 
 
 def parse_args():
