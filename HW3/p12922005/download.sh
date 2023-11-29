@@ -1,0 +1,2 @@
+gdown 1nDTYmOHyc678rCXyixz9gbwMTrzwMTtj
+tar xvf adapter_checkpoint.tar
