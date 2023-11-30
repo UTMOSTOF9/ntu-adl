@@ -1,6 +1,5 @@
 import os
 from pprint import pprint
-from typing import Any, Dict
 
 import torch
 from datasets import load_dataset
@@ -85,7 +84,7 @@ def main(output_dir="results/Taiwan-LLM-7B-v2.0-chat", data_folder='data'):
 
     # Upcast layer for flash attnetion
     if use_flash_attention:
-        from code.llama_patch import upcast_layer_for_flash_attention
+        from llama_patch import upcast_layer_for_flash_attention
         torch_dtype = torch.bfloat16 if train_args.bf16 else torch.float16 if train_args.fp16 else torch.float32
         model = upcast_layer_for_flash_attention(model, torch_dtype)
 

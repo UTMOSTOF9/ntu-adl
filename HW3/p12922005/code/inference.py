@@ -4,6 +4,7 @@ import json
 import torch
 from datasets import load_dataset
 from peft import PeftModel
+from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from utils import get_bnb_config, get_prompt
 
@@ -68,7 +69,7 @@ def main():
 
     output_data = []
     with torch.inference_mode():
-        for i, data in enumerate(dataset):
+        for i, data in tqdm(enumerate(dataset)):
             prompt = get_prompt(data['instruction'], prompt_mode=args.prompt_mode)
             input_ids = tokenizer(prompt, return_tensors='pt', add_special_tokens=False).input_ids.cuda()
             outputs = model.generate(input_ids=input_ids)
@@ -76,7 +77,7 @@ def main():
             output_data.append(
                 {
                     'id': raw_data[i]['id'],
-                    'output': outputs[0]
+                    'output': outputs[0].split(prompt + ' ')[-1]
                 }
             )
 

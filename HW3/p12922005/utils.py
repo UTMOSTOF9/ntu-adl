@@ -1,8 +1,12 @@
 import random
-from code.few_shots import few_shots
+import sys
 
 import torch
 from transformers import BitsAndBytesConfig
+
+sys.path.append('code')
+if 1:
+    from few_shots import few_shots
 
 
 def is_old_to_new(text):

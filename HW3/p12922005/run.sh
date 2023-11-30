@@ -1,4 +1,4 @@
-python3 code/inference.py \
+ipython --pdb -- code/inference.py \
     --base_model_path $1 \
     --peft_path $2 \
     --test_data_path $3 \
