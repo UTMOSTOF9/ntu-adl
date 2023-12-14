@@ -1,6 +1,6 @@
-from pathlib import Path
 import argparse
 import json
+from pathlib import Path
 
 SPLITS = ["train", "valid"]
 
@@ -44,6 +44,7 @@ def preprocess_swag(data, context):
         swag.append(d)
     return swag
 
+
 def preprocess_squad_end2end(data, context):
     squad = []
 
@@ -65,6 +66,7 @@ def preprocess_squad_end2end(data, context):
 
     return squad
 
+
 def main():
     data = json.loads(args.test_file.read_text())
     context = json.loads(args.context_file.read_text())
@@ -80,6 +82,7 @@ def main():
         json.dumps(squad_end2end, indent=2, ensure_ascii=False, allow_nan=False),
         encoding='UTF-8',
     )
+
 
 if __name__ == "__main__":
     args = parse_args()

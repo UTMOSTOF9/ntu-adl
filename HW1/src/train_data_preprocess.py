@@ -1,6 +1,6 @@
-from pathlib import Path
 import argparse
 import json
+from pathlib import Path
 
 SPLITS = ["train", "valid"]
 
@@ -69,6 +69,7 @@ def preprocess_squad(data, context):
         squad.append(d)
     return squad
 
+
 def preprocess_squad(data, context):
     squad = []
 
@@ -88,6 +89,7 @@ def preprocess_squad(data, context):
 
         squad.append(d)
     return squad
+
 
 def preprocess_squad_end2end(data, context):
     squad = []
@@ -119,6 +121,7 @@ def preprocess_squad_end2end(data, context):
         squad.append(d)
     return squad
 
+
 def main():
     args.output_folder.mkdir(parents=True, exist_ok=True)
 
@@ -140,7 +143,8 @@ def main():
         squad_path.write_text(json.dumps(squad, indent=2, ensure_ascii=False, allow_nan=False), encoding='UTF-8')
 
         squad_path = args.output_folder / f"{split}_squad_end2end.json"
-        squad_path.write_text(json.dumps(squad_end2end, indent=2, ensure_ascii=False, allow_nan=False), encoding='UTF-8')
+        squad_path.write_text(json.dumps(squad_end2end, indent=2,
+                              ensure_ascii=False, allow_nan=False), encoding='UTF-8')
 
 
 if __name__ == "__main__":

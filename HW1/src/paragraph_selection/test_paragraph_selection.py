@@ -1,20 +1,14 @@
 import argparse
-from pathlib import Path
+import json
 from itertools import chain
-
-from datasets import load_dataset
+from pathlib import Path
 
 import torch
+from datasets import load_dataset
 from torch.utils.data import DataLoader
-
-from transformers import (
-    AutoConfig,
-    AutoModelForMultipleChoice,
-    AutoTokenizer,
-    default_data_collator,
-)
 from tqdm import tqdm
-import json
+from transformers import (AutoConfig, AutoModelForMultipleChoice,
+                          AutoTokenizer, default_data_collator)
 
 
 def parse_args():
