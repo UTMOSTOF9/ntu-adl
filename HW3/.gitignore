@@ -1,2 +1,4 @@
-/ckpt
-/adapter_checkpoint
+ckpt
+results*
+adapter_checkpoint
+wandb
