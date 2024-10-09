@@ -1,1 +1,1 @@
-bash scripts/_train_question_answering_end_to_end.sh bert-base-chinese
+bash scripts/_train_question_answering_end_to_end.sh ckiplab/bert-base-chinese

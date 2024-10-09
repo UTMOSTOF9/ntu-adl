@@ -7,10 +7,11 @@ python src/question_answering/train_question_answering.py \
     --pad_to_max_length \
     --per_device_train_batch_size 8 \
     --learning_rate 3e-5 \
-    --weight_decay 0.01 \
+    --weight_decay 0 \
     --num_train_epochs 6 \
-    --num_warmup_steps 200 \
+    --num_warmup_steps 100 \
     --gradient_accumulation_steps 6 \
+    --lr_scheduler_type linear \
     --output_dir results/$model_name/ckpt/question_answering \
-    --seed 1221 \
-    --fp16
+    --seed 0822 \
+    --mixed_precision fp16

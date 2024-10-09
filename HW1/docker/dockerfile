@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:experimental
 # CUDA development image for building sources
-FROM nvidia/cuda:11.6.2-cudnn8-devel-ubuntu20.04 as builder
+FROM nvidia/cuda:12.1.1-devel-ubuntu20.04 as builder
 
 # available options 3.8, 3.9, 3.10, 3.11
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.10
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -31,9 +31,9 @@ ENV PATH=$MINICONDA_PREFIX/bin:${PATH}
 
 ARG PYTHON_EXE=$MINICONDA_PREFIX/bin/python
 
-RUN $PYTHON_EXE -m pip install pip wheel ipython fire ninja cython tqdm
-RUN $PYTHON_EXE -m pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 \
-    --index-url https://download.pytorch.org/whl/cu116
+RUN $PYTHON_EXE -m pip install wheel ipython fire ninja cython tqdm
+RUN $PYTHON_EXE -m pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+
 
 # for hw1
 WORKDIR /code

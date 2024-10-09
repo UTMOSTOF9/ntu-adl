@@ -1,5 +1,5 @@
 model_name=$1
-python src/question_answering/train_question_answering.py \
+ipython --pdb --  src/question_answering/train_question_answering.py \
     --model_name_or_path $model_name \
     --train_file data/processed/train_squad.json \
     --validation_file data/processed/valid_squad.json \
@@ -12,6 +12,6 @@ python src/question_answering/train_question_answering.py \
     --num_warmup_steps 200 \
     --gradient_accumulation_steps 6 \
     --output_dir results/$model_name-no-pretrained/ckpt/question_answering \
-    --seed 1221 \
-    --fp16 \
+    --seed 0822 \
+    --mixed_precision fp16 \
     --from_scratch

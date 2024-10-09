@@ -23,7 +23,6 @@ import json
 import logging
 import math
 import os
-import random
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
@@ -44,11 +43,8 @@ from transformers import (CONFIG_MAPPING, MODEL_MAPPING, AutoConfig,
                           AutoModelForMultipleChoice, AutoTokenizer,
                           PreTrainedTokenizerBase, SchedulerType,
                           default_data_collator, get_scheduler)
-from transformers.utils import (PaddingStrategy, check_min_version,
-                                get_full_repo_name, send_example_telemetry)
-
-# Will error if the minimal version of Transformers is not installed. Remove at your own risks.
-# check_min_version("4.25.0.dev0")
+from transformers.utils import (PaddingStrategy, get_full_repo_name,
+                                send_example_telemetry)
 
 logger = get_logger(__name__)
 # You should update this to your particular problem to have better documentation of `model_type`
@@ -169,7 +165,7 @@ def parse_args():
         action="store_true",
         help="Activate debug mode and run training only with a subset of data.",
     )
-    parser.add_argument("--push_to_hub", action="store_true", help="Whether or not to push the model to the Hub.")
+    # parser.add_argument("--push_to_hub", action="store_true", help="Whether or not to push the model to the Hub.")
     parser.add_argument(
         "--hub_model_id", type=str, help="The name of the repository to keep in sync with the local `output_dir`."
     )
@@ -202,13 +198,14 @@ def parse_args():
         ),
     )
     parser.add_argument(
-        "--fp16",
-        action="store_true",
+        "--mixed_precision",
+        type=str,
+        default=None,
     )
     args = parser.parse_args()
 
-    if args.push_to_hub:
-        assert args.output_dir is not None, "Need an `output_dir` to create a repo when `--push_to_hub` is passed."
+    # if args.push_to_hub:
+    #     assert args.output_dir is not None, "Need an `output_dir` to create a repo when `--push_to_hub` is passed."
 
     return args
 
@@ -287,7 +284,7 @@ def main():
         accelerator_log_kwargs["logging_dir"] = args.output_dir
 
     accelerator = Accelerator(
-        fp16=args.fp16,
+        mixed_precision=args.mixed_precision,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         **accelerator_log_kwargs,
     )
@@ -311,21 +308,21 @@ def main():
         set_seed(args.seed)
 
     # Handle the repository creation
-    if accelerator.is_main_process:
-        if args.push_to_hub:
-            if args.hub_model_id is None:
-                repo_name = get_full_repo_name(Path(args.output_dir).name, token=args.hub_token)
-            else:
-                repo_name = args.hub_model_id
-            repo = Repository(args.output_dir, clone_from=repo_name)
+    # if accelerator.is_main_process:
+    #     if args.push_to_hub:
+    #         if args.hub_model_id is None:
+    #             repo_name = get_full_repo_name(Path(args.output_dir).name, token=args.hub_token)
+    #         else:
+    #             repo_name = args.hub_model_id
+    #         repo = Repository(args.output_dir, clone_from=repo_name)
 
-            with open(os.path.join(args.output_dir, ".gitignore"), "w+") as gitignore:
-                if "step_*" not in gitignore:
-                    gitignore.write("step_*\n")
-                if "epoch_*" not in gitignore:
-                    gitignore.write("epoch_*\n")
-        elif args.output_dir is not None:
-            os.makedirs(args.output_dir, exist_ok=True)
+    #         with open(os.path.join(args.output_dir, ".gitignore"), "w+") as gitignore:
+    #             if "step_*" not in gitignore:
+    #                 gitignore.write("step_*\n")
+    #             if "epoch_*" not in gitignore:
+    #                 gitignore.write("epoch_*\n")
+    #     elif args.output_dir is not None:
+    #         os.makedirs(args.output_dir, exist_ok=True)
     accelerator.wait_for_everyone()
 
     # Get the datasets: you can either provide your own CSV/JSON/TXT training and evaluation files (see below)
@@ -390,15 +387,21 @@ def main():
             "You can do it from another script, save it, and load it from here, using --tokenizer_name."
         )
 
+    if "xlnet" not in args.model_name_or_path:
+        config.max_position_embeddings = args.max_length
+
     if args.model_name_or_path:
         model = AutoModelForMultipleChoice.from_pretrained(
             args.model_name_or_path,
             from_tf=bool(".ckpt" in args.model_name_or_path),
             config=config,
+            ignore_mismatched_sizes=True,
         )
     else:
         logger.info("Training new model from scratch")
         model = AutoModelForMultipleChoice.from_config(config)
+
+    for param in model.parameters(): param.data = param.data.contiguous()
 
     model.resize_token_embeddings(len(tokenizer))
 
@@ -440,8 +443,8 @@ def main():
     eval_dataset = processed_datasets["validation"]
 
     # Log a few random samples from the training set:
-    for index in random.sample(range(len(train_dataset)), 3):
-        logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
+    # for index in random.sample(range(len(train_dataset)), 3):
+    #     logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
 
     # DataLoaders creation:
     if args.pad_to_max_length:
@@ -453,7 +456,7 @@ def main():
         # the samples passed). When using mixed precision, we add `pad_to_multiple_of=8` to pad all tensors to multiple
         # of 8s, which will enable the use of Tensor Cores on NVIDIA hardware with compute capability >= 7.5 (Volta).
         data_collator = DataCollatorForMultipleChoice(
-            tokenizer, pad_to_multiple_of=(8 if accelerator.use_fp16 else None)
+            tokenizer, pad_to_multiple_of=(8 if accelerator.mixed_precision is not None else None)
         )
 
     train_dataloader = DataLoader(
@@ -559,6 +562,9 @@ def main():
             starting_epoch = resume_step // len(train_dataloader)
             resume_step -= starting_epoch * len(train_dataloader)
 
+    metric_table = {}
+    best_metric = 0
+
     for epoch in range(starting_epoch, args.num_train_epochs):
         model.train()
         if args.with_tracking:
@@ -586,13 +592,6 @@ def main():
                 progress_bar.update(1)
                 completed_steps += 1
 
-            if isinstance(checkpointing_steps, int):
-                if completed_steps % checkpointing_steps == 0:
-                    output_dir = f"step_{completed_steps }"
-                    if args.output_dir is not None:
-                        output_dir = os.path.join(args.output_dir, output_dir)
-                    accelerator.save_state(output_dir)
-
             if completed_steps >= args.max_train_steps:
                 break
 
@@ -608,7 +607,7 @@ def main():
             )
 
         eval_metric = metric.compute()
-        accelerator.print(f"epoch {epoch}: {eval_metric}")
+        logger.info(json.dumps(eval_metric, indent=4))
 
         if args.with_tracking:
             accelerator.log(
@@ -621,39 +620,31 @@ def main():
                 step=completed_steps,
             )
 
-        if args.push_to_hub and epoch < args.num_train_epochs - 1:
-            accelerator.wait_for_everyone()
-            unwrapped_model = accelerator.unwrap_model(model)
+        accelerator.wait_for_everyone()
+        unwrapped_model = accelerator.unwrap_model(model)
+        ckpt_path = Path(args.output_dir, f"epoch_{epoch:03d}")
+        ckpt_path.mkdir(parents=True, exist_ok=True)
+        unwrapped_model.save_pretrained(
+            ckpt_path, is_main_process=accelerator.is_main_process, save_function=accelerator.save
+        )
+        if accelerator.is_main_process:
+            tokenizer.save_pretrained(ckpt_path)
+
+        if eval_metric['accuracy'] > best_metric:
+            best_metric = eval_metric['accuracy']
             unwrapped_model.save_pretrained(
                 args.output_dir, is_main_process=accelerator.is_main_process, save_function=accelerator.save
             )
             if accelerator.is_main_process:
                 tokenizer.save_pretrained(args.output_dir)
-                repo.push_to_hub(
-                    commit_message=f"Training in progress epoch {epoch}", blocking=False, auto_lfs_prune=True
-                )
 
-        if args.checkpointing_steps == "epoch":
-            output_dir = f"epoch_{epoch}"
-            if args.output_dir is not None:
-                output_dir = os.path.join(args.output_dir, output_dir)
-            accelerator.save_state(output_dir)
+        metric_table[epoch] = eval_metric['accuracy']
+
+        with open(os.path.join(args.output_dir, "eval_metrics.json"), "w") as f:
+            f.write(json.dumps(metric_table, indent=4))
 
     if args.with_tracking:
         accelerator.end_training()
-
-    if args.output_dir is not None:
-        accelerator.wait_for_everyone()
-        unwrapped_model = accelerator.unwrap_model(model)
-        unwrapped_model.save_pretrained(
-            args.output_dir, is_main_process=accelerator.is_main_process, save_function=accelerator.save
-        )
-        if accelerator.is_main_process:
-            tokenizer.save_pretrained(args.output_dir)
-            if args.push_to_hub:
-                repo.push_to_hub(commit_message="End of training", auto_lfs_prune=True)
-        with open(os.path.join(args.output_dir, "all_results.json"), "w") as f:
-            json.dump({"eval_accuracy": eval_metric["accuracy"]}, f)
 
 
 if __name__ == "__main__":

@@ -2,23 +2,13 @@
 
 ## Environment Setup
 
--   Python 3.9
+- OS: Ubuntu 22.04
 
--   Pytorch 1.12.1 (CUDA 11.6, CUDA 11.3, or CUDA 10.2)
+- Python 3.10
 
-Noted: Ubuntu 22.04 is hard to install CUDA with version under 11.6, please use Ubuntu 20.04 or 18.04.
+- Pytorch 2.1.0 (CUDA 12.1)
 
--   scikit-learn 1.1.2
-
--   nltk: 3.7
-
--   transformers: 4.22.2
-
--   datasets: 2.14.5 # 2.5.2 has localfile bug.
-
--   accelerate: 0.13.0
-
--   some other packages in use: tqdm, numpy, pandas, matplotlib, evaluate, gdown.
+- Other requirements: see [requirements.txt](docker/requirements.txt)
 
 Also, it's recommended to use docker for consistant enviroment to run the code without enviroment issues.
 
@@ -64,10 +54,10 @@ bash scripts/train_hfl-chinese-macbert-base.sh
 bash scripts/train_hfl-chinese-roberta-wwm-ext.sh
 ```
 
-4. Train bert-base-chinese from scratch (bert from scratch)
+4. Train bert-base-chinese from scratch (only qa task from scratch)
 
 ```bash
-bash scripts/train_bert-base-chinese-from-scratch.sh
+bash scripts/train_bert-base-chinese_qa_from-scratch.sh
 ```
 
 5. Train end to end QA model with bert-base-chinese pretrained (end to end QA)
@@ -91,7 +81,7 @@ cd -
 ### Run docker image
 
 ```bash
-bash docker/run.sh
+bash docker/run_docker.sh
 # then you will enter the docker container and source code will mount to /code you can run scripts directly.
 # like this:
 bash scripts/train_bert-base-chinese.sh
