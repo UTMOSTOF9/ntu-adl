@@ -1,12 +1,14 @@
 mkdir -p data
-gdown -O data/raw.tar.gz 1MNnsPFz79TC6zahCQ9_0FIgzNrTNQrEf
+gdown -O data/raw.tar.gz 19_c7uWXWFu7S2AtAOE--6Um9VLVxvNRd
 
 tar xvzf data/raw.tar.gz -C data
 
-bash scripts/_prepare_train_dataset.sh
+bash scripts/_prepare_data.sh
 
-echo "Downloaded data and preprocessed training data!"
+echo "Downloaded and preprocessed data!"
 
-gdown -O pretrained.tar.gz 1-CQjidj44odX3ZpqOE7u7RRNk_SYmsi_
+gdown -O pretrained.tar.gz 1FXSNXm6vSzRhoBOX7NJuuTBcMINM-6yw
 
 tar xvzf pretrained.tar.gz
+
+echo "Downloaded pretrained models!"
