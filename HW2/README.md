@@ -19,7 +19,7 @@ bash ./run.sh /path/to/input.jsonl /path/to/output.jsonl
 ### build docker first
 
 ```bash
-cd src/docker
+cd code/docker
 bash build.sh
 cd -
 ```
@@ -29,17 +29,17 @@ cd -
 Please put the data into the correct path as follows:
 
 ```bash
-gdown 1HiP6vuRGKpT3FcTnePLVBYl5OCs9NVe3
+gdown 1YWrSX37OfQSDJgdaeyrrh6y9110I1iPi
 unzip data_for_train.zip
 ```
 
 ### Run training script with docker
 
 ```bash
-bash src/docker/run.sh
+bash code/docker/run.sh
 
 ## inside docker
 
-bash src/scripts/train_summarization.sh
+bash code/scripts/train_summarization.sh
 
 ```

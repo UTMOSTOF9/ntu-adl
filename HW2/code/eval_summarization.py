@@ -14,8 +14,8 @@ if 1:
     import sys
     sys.path.append('.')
 
-from src.arguments import DataArguments, ModelArguments
-from src.utils import compute_metrics, preprocess_function
+from arguments import DataArguments, ModelArguments
+from utils import compute_metrics, preprocess_function
 
 torch.set_num_threads(1)
 

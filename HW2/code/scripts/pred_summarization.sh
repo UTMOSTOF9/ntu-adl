@@ -1,5 +1,5 @@
-python src/jsonl2json.py --input=$1 --output="tmp.json"
-python src/pred_summarization.py \
+python code/jsonl2json.py --input=$1 --output="tmp.json"
+python code/pred_summarization.py \
     --model_name_or_path="pretrained" \
     --cache_dir="./cache" \
     --test_file="tmp.json" \

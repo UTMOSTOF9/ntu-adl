@@ -1,6 +1,8 @@
 import logging
 import os
 import sys
+from code.arguments import DataArguments, ModelArguments
+from code.utils import compute_metrics, preprocess_function
 from functools import partial
 
 import datasets
@@ -16,12 +18,12 @@ from transformers import (AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer,
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import is_offline_mode
 
+nltk.download('punkt_tab')
+
 if 1:
     import sys
     sys.path.append('.')
 
-from src.arguments import DataArguments, ModelArguments
-from src.utils import compute_metrics, preprocess_function
 
 torch.set_num_threads(1)
 
@@ -110,6 +112,9 @@ def main():
         revision=model_args.model_revision,
     )
 
+    for param in model.parameters():
+        param.data = param.data.contiguous()
+
     # We resize the embeddings only when necessary to avoid index errors. If you are creating a model from scratch
     # on a small vocab and want a smaller embedding size, remove this test.
     embedding_size = model.get_input_embeddings().weight.shape[0]
@@ -166,6 +171,7 @@ def main():
             max_train_samples = min(len(train_dataset), data_args.max_train_samples)
             train_dataset = train_dataset.select(range(max_train_samples))
 
+        breakpoint()
         with training_args.main_process_first(desc="train dataset map preprocessing"):
             train_dataset = train_dataset.map(
                 partial(preprocess_function, tokenizer=tokenizer, data_args=data_args),
@@ -175,6 +181,7 @@ def main():
                 load_from_cache_file=not data_args.overwrite_cache,
                 desc="Running tokenizer on train dataset",
             )
+        breakpoint()
 
     if training_args.do_eval:
         if "validation" not in raw_datasets:

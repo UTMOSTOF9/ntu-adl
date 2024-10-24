@@ -1,7 +1,7 @@
-python src/jsonl2json.py --input="data/raw/train.jsonl" --output="data/processed/train.json"
-python src/jsonl2json.py --input="data/raw/public.jsonl" --output="data/processed/public.json"
+python code/jsonl2json.py --input="data/raw/train.jsonl" --output="data/processed/train.json"
+python code/jsonl2json.py --input="data/raw/public.jsonl" --output="data/processed/public.json"
 
-python src/train_summarization.py \
+python code/train_summarization.py \
     --model_name_or_path="google/mt5-small" \
     --cache_dir="./cache" \
     --output_dir="./results/summerization2" \

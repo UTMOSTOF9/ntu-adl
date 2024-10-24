@@ -12,7 +12,7 @@ if 1:
     sys.path.append('.')
 
 import jsonlines
-from src.arguments import DataArguments, ModelArguments
+from arguments import DataArguments, ModelArguments
 
 
 def preprocess_function_for_test(examples, tokenizer, data_args):

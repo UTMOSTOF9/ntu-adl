@@ -166,3 +166,6 @@ archives
 .lock
 .vscode
 **/data
+**/cache
+**/pretrained
+*.zip

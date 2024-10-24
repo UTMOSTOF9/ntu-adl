@@ -1,5 +1,5 @@
-python src/jsonl2json.py --input="data/raw/public.jsonl" --output="data/processed/public.json"
-python src/eval_summarization.py \
+python code/jsonl2json.py --input="data/raw/public.jsonl" --output="data/processed/public.json"
+python code/eval_summarization.py \
 --model_name_or_path="results/summerization/best" \
 --cache_dir="./cache" \
 --valid_file="data/processed/public.json" \

@@ -1,2 +1,2 @@
-gdown 1CgkZf0O-8KYYElZeSCEw6r3wH_ENw34a
+gdown 1-2TMsZBpPyIlfdjbeRHUIBgq8zBYhIq6
 unzip pretrained.zip
