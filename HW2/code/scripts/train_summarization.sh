@@ -31,4 +31,4 @@ python code/train_summarization.py \
     --predict_with_generate=True \
     --pad_to_max_length=True \
     --num_beams=3 \
-    --bf16 --tf32=y
+    --fp16 --tf32=y

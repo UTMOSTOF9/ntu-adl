@@ -12,4 +12,4 @@ python code/pred_summarization.py \
     --dataloader_num_workers=4 \
     --predict_with_generate=True \
     --pad_to_max_length=True \
-    --bf16 --tf32=y
+    --fp16 --tf32=y
