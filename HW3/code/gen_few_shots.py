@@ -6,17 +6,16 @@ import torch
 from peft import PeftModel
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from utils import get_bnb_config, get_prompt
+from HW3.code.prompt import get_bnb_config, get_prompt
 
 
-def perplexity(model, tokenizer, data, max_length=1024, prompt_mode='zero_shot'):
+def perplexity(model, tokenizer, data, max_length=1024):
     data_size = len(data)
-    instructions = [get_prompt(x["instruction"], prompt_mode=prompt_mode) for x in data]
+    instructions = [get_prompt(x["instruction"]) for x in data]
     outputs = [x["output"] for x in data]
 
     # Tokenize data
     tokenized_instructions = tokenizer(instructions, add_special_tokens=False)
-    tokenized_instructions2 = tokenizer(instructions, add_special_tokens=False)
     tokenized_outputs = tokenizer(outputs, add_special_tokens=False)
     output_masks = []
 
@@ -26,14 +25,12 @@ def perplexity(model, tokenizer, data, max_length=1024, prompt_mode='zero_shot')
         output_input_ids = tokenized_outputs["input_ids"][i] + [tokenizer.eos_token_id]
         tokenized_instructions["input_ids"][i] = instruction_input_ids + output_input_ids
         tokenized_instructions["attention_mask"][i] = [1] * len(tokenized_instructions["input_ids"][i])
-
-        tokenized_instructions2["input_ids"][i] = [tokenizer.bos_token_id] + tokenized_instructions2["input_ids"][i]
         output_mask = [0] * len(instruction_input_ids) + [1] * len(output_input_ids)
-        tokenized_instructions["input_ids"][i] = torch.tensor(tokenized_instructions["input_ids"][i])[:max_length]
+
+        tokenized_instructions["input_ids"][i] = torch.tensor(tokenized_instructions["input_ids"][i][:max_length])
         tokenized_instructions["attention_mask"][i] = torch.tensor(
             tokenized_instructions["attention_mask"][i][:max_length]
         )
-        tokenized_instructions2["input_ids"][i] = torch.tensor(tokenized_instructions2["input_ids"][i])[:max_length]
         output_mask = torch.tensor(output_mask[:max_length])
         output_masks.append(output_mask)
 
@@ -42,7 +39,6 @@ def perplexity(model, tokenizer, data, max_length=1024, prompt_mode='zero_shot')
     loss_fct = torch.nn.CrossEntropyLoss(reduction="none")
     for i in tqdm(range(data_size)):
         input_ids = tokenized_instructions["input_ids"][i].unsqueeze(0)
-        input_ids_prompt = tokenized_instructions2["input_ids"][i].unsqueeze(0)
         attn_mask = tokenized_instructions["attention_mask"][i].unsqueeze(0)
         output_mask = output_masks[i].unsqueeze(0)
         label = input_ids
@@ -60,19 +56,7 @@ def perplexity(model, tokenizer, data, max_length=1024, prompt_mode='zero_shot')
             / shift_output_mask.sum(1)
         )
         ppls += perplexity_batch.tolist()
-
-        if i < 5:
-            with torch.inference_mode():
-                outputs = model.generate(input_ids=input_ids_prompt)
-                outputs = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-            print('\n\n')
-            print('pred:', outputs[0])
-            print('\n')
-            print('gt:', data[i]['output'])
-            print('\n')
-            print('ppl:', perplexity_batch.tolist())
-            print('\n\n')
-
+        data[i]['ppl'] = perplexity_batch.tolist()
     return {"perplexities": ppls, "mean_perplexity": np.mean(ppls)}
 
 
@@ -93,18 +77,18 @@ if __name__ == "__main__":
         help="Path to the saved PEFT checkpoint."
     )
     parser.add_argument(
-        "--prompt_mode",
-        type=str,
-        default="zero_shot",
-        required=False,
-        help="Prompt mode."
-    )
-    parser.add_argument(
         "--test_data_path",
         type=str,
         default="",
         required=True,
         help="Path to test data."
+    )
+    parser.add_argument(
+        "--num_samples",
+        type=int,
+        default=500,
+        required=True,
+        help="Number of samples."
     )
     args = parser.parse_args()
 
@@ -142,12 +126,19 @@ if __name__ == "__main__":
         model = PeftModel.from_pretrained(model, args.peft_path)
 
     with open(args.test_data_path, "r") as f:
-        data = json.load(f)
+        data = json.load(f)[:args.num_samples]
 
     model.eval()
-    ppl = perplexity(model, tokenizer, data, 1024, args.prompt_mode)
-    for i, x in enumerate(data):
-        x['ppl'] = ppl['perplexities'][i]
-    with open('few_shots.json', "w") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    ppl = perplexity(model, tokenizer, data)
+
+    few_shots = [
+        x
+        for score, x in zip(ppl['perplexities'], data)
+        if score < ppl['mean_perplexity']
+    ]
+
+    few_shots = "few_shots = " + json.dumps(data, indent=2, ensure_ascii=False)
+    with open('src/few_shots.py', "w") as f:
+        f.write(few_shots)
+
     print("Mean perplexity:", ppl["mean_perplexity"])

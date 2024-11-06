@@ -16,11 +16,11 @@ RUN unattended-upgrade
 RUN apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 RUN pip install -U pip wheel ipython setuptools==56.0.0 wheel cython
-RUN pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+RUN pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 
 WORKDIR /code
 COPY . /code
 RUN pip install -r requirements.txt
-RUN MAX_JOBS=4 pip install flash-attn --no-build-isolation
+RUN MAX_JOBS=8 pip install flash-attn --no-build-isolation
 
 CMD bash

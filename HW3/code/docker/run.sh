@@ -5,5 +5,6 @@ docker run --gpus all \
     --ipc=host \
     --net=host \
     -v $PWD:/code \
+    -v ~/.cache:/root/.cache \
     -v /home/jack/.netrc:/root/.netrc \
     -it --rm adl:HW3 $@

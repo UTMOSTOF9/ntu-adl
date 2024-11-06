@@ -6,7 +6,7 @@ from datasets import load_dataset
 from peft import PeftModel
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from utils import get_bnb_config, get_prompt
+from HW3.code.prompt import get_bnb_config, get_prompt
 
 
 def main():

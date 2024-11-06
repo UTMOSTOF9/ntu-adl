@@ -19,7 +19,7 @@ bash ./run.sh /path/to/Taiwan-LLaMa-folder /path/to/adapter_checkpoint /path/to/
 ### build docker first
 
 ```bash
-cd src/docker
+cd code/docker
 bash build.sh
 cd -
 ```
@@ -38,10 +38,10 @@ rm -fr hw3 hw3.zip
 ### Run training script with docker
 
 ```bash
-bash src/docker/run.sh src/scripts/train.sh
+bash code/docker/run.sh code/scripts/train.sh
 
 ## inside docker
 
-bash src/scripts/train_summarization.sh
+bash code/scripts/train_summarization.sh
 
 ```
